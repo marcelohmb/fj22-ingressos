@@ -151,4 +151,10 @@
         </plugins>
     </build>
 
+	<developers>
+		<developer>
+			<name>Marcelo Henrique</name>
+			<email>marcelo.hmb@gmail.com</email>
+		</developer>
+	</developers>
 </project>

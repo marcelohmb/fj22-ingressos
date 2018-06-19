@@ -16,44 +16,51 @@ import br.com.caelum.ingresso.dao.SalaDao;
 import br.com.caelum.ingresso.dao.SessaoDao;
 import br.com.caelum.ingresso.model.Sessao;
 import br.com.caelum.ingresso.model.form.SessaoForm;
+import br.com.caelum.ingresso.model.validacao.GerenciadorDeSessao;
 
 @Controller
 public class SessaoController {
-		@Autowired
-		private SalaDao salaDao;
-		@Autowired
-		private FilmeDao filmeDao;
-		@Autowired
-		private SessaoDao sessaoDao;
-		
-		@GetMapping("/admin/sessao")
-		public ModelAndView form(@RequestParam("salaId") Integer salaId, SessaoForm form){
-			
-			ModelAndView modelAndView = new ModelAndView("sessao/sessao");
-			
-			form.setSalaId(salaId);
-			
-			modelAndView.addObject("form", form);
-			
-			modelAndView.addObject("sala",salaDao.findOne(salaId));
-			
-			modelAndView.addObject("filmes", filmeDao.findAll());
-			
+
+
+	@Autowired
+	private SalaDao salaDao;
+
+	@Autowired
+	private FilmeDao filmeDao;
+
+	@Autowired
+	private SessaoDao sessaoDao;
+
+	@GetMapping("admin/sessao")
+	public ModelAndView form(@RequestParam("salaId") Integer salaId, SessaoForm form) {
+
+		form.setSalaId(salaId);
+
+		ModelAndView modelAndView = new ModelAndView("sessao/sessao");
+
+		modelAndView.addObject("sala", salaDao.findOne(salaId));
+		modelAndView.addObject("filmes", filmeDao.findAll());
+		modelAndView.addObject("form", form);
+
+		return modelAndView;
+	}
+
+	@PostMapping("/admin/sessao")
+	@Transactional
+	public ModelAndView salva(@Valid SessaoForm form, BindingResult result) {
+		if (result.hasErrors())
+			return form(form.getSalaId(), form);
+
+		Sessao sessao = form.toSessao(filmeDao, salaDao);
+		GerenciadorDeSessao gerenciadorDeSessao = new GerenciadorDeSessao(
+				sessaoDao.buscaSessoesDaSala(sessao.getSala()));
+		if (gerenciadorDeSessao.cabe(sessao)) {
+			sessaoDao.save(sessao);
+			ModelAndView modelAndView = new ModelAndView("redirect:/admin/sala/" + form.getSalaId() + "/sessoes");
 			return modelAndView;
 		}
-		
-		@PostMapping(value = "/admin/sessao") 
-		@Transactional
-		public ModelAndView salva(@Valid SessaoForm form, BindingResult result){
-			
-			if (result.hasErrors()) {
-				return form(form.getSalaId(),form);
-			}
-			
-			Sessao sessao = form.toSessao(filmeDao, salaDao);
-			
-			sessaoDao.save(sessao);
-			
-			return new ModelAndView("redirect:/admin/sala/" + form.getSalaId() + "/sessoes");
+		else {
+			return form(form.getSalaId(), form);
 		}
+	}
 }

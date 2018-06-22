@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import br.com.caelum.ingresso.model.Filme;
@@ -24,7 +25,7 @@ public class ImdbClient {
 		try {
 			
 			return Optional.of(client.getForObject(url, tClass));
-		} catch (Exception e) {
+		} catch (RestClientException e) {
 			logger.error(e.getMessage(),e);
 			return Optional.empty();
 		}
